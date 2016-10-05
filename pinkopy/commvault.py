@@ -4,6 +4,7 @@ from .base_session import BaseSession
 from .clients import ClientSession
 from .jobs import JobSession
 from .subclients import SubclientSession
+from .client_groups import ClientGroupSession
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ class CommvaultSession(BaseSession):
         self.clients = ClientSession(token=self.headers['Authtoken'], *args, **kwargs)
         self.subclients = SubclientSession(token=self.headers['Authtoken'], *args, **kwargs)
         self.jobs = JobSession(token=self.headers['Authtoken'], *args, **kwargs)
+        self.client_groups = ClientGroupSession(token=self.headers['Authtoken'], *args, **kwargs)
 
         self.subsessions = [self.clients,
                             self.subclients,

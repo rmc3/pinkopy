@@ -1,5 +1,6 @@
 import logging
 import xmltodict
+from dicttoxml import dicttoxml
 
 from .base_session import BaseSession
 from .exceptions import raise_requests_error
@@ -39,7 +40,7 @@ class ClientSession(BaseSession):
             msg = 'Client {} not in client list.'.format(client_id)
             raise_requests_error(404, msg)
 
-    def get_client_properties(self, client_id):
+    def get_client_properties(self, client_id, xml=False):
         """Get client properties.
 
         This call sometimes replies in XML, because who cares about
@@ -48,6 +49,7 @@ class ClientSession(BaseSession):
 
         Args:
             client_id (str): client id
+            xml (boolean): If True, returns the raw XML response.
 
         Returns:
             dict: client properties
@@ -56,23 +58,51 @@ class ClientSession(BaseSession):
             log.warning('deprecated: client_id support for int for backward compatibility only')
             client_id = str(client_id)
         path = 'Client/{}'.format(client_id)
-        res = self.request('GET', path)
+        if xml:
+            headers = {"Accept": "application/xml"}
+        else:
+            headers = {}
+        res = self.request('GET', path, headers=headers)
         # If you are using a < v10 SP12 this call will respond in
         # xml even though we are requesting json.
+        if xml:
+            return res.text
+        else:
+            if not res.json():
+                # turn wrong xml into json
+                data = xmltodict.parse(res.text)
+            else:
+                data = res.json()
+            try:
+                props = data['clientProperties']
+            except KeyError:
+                # support previous Commvault api versions
+                props = data['App_GetClientPropertiesResponse']['clientProperties']
+            if not props:
+                msg = 'No client properties found for client {}'.format(client_id)
+                raise_requests_error(404, msg)
+            return props
+
+    def post_client_properties(self, client_id, props):
+        """Post client properties.
+
+        Args:
+            client_id (str): client id
+            props (str): XML client properties string
+
+        Returns:
+            dict: response
+        """
+        if isinstance(client_id, int):
+            log.warning('deprecated: client_id support for int for backward compatibility only')
+            client_id = str(client_id)
+        path = 'Client/{}'.format(client_id)
+        res = self.request('POST', path, payload_nondict=props, headers={"Content-type": "application/xml"})
         if not res.json():
-            # turn wrong xml into json
             data = xmltodict.parse(res.text)
         else:
             data = res.json()
-        try:
-            props = data['clientProperties']
-        except KeyError:
-            # support previous Commvault api versions
-            props = data['App_GetClientPropertiesResponse']['clientProperties']
-        if not props:
-            msg = 'No client properties found for client {}'.format(client_id)
-            raise_requests_error(404, msg)
-        return props
+        return data
 
     def get_clients(self):
         """Get clients.
@@ -83,6 +113,7 @@ class ClientSession(BaseSession):
         path = 'Client'
         res = self.request('GET', path)
         data = res.json()
+        print(data)
         try:
             clients = data['clientProperties']
         except KeyError:

@@ -119,7 +119,14 @@ class BaseSession(object):
         allowed_attempts = 3
         attempt = 1 if not attempt else attempt
         service = service if service else self.service
-        headers = headers if headers else self.headers
+        print(headers)
+        if headers:
+            new_headers = self.headers.copy()
+            new_headers.update(headers)
+            headers = new_headers
+            print(headers)
+        else:
+            headers = self.headers
         url = urljoin(service, path)
         try:
             if method == 'POST':

@@ -38,3 +38,25 @@ class SubclientSession(BaseSession):
             msg = 'No subclients for client {}'.format(client_id)
             raise_requests_error(404, msg)
         return subclients
+
+    def post_subclient_properties(self, subclient_id, props):
+        """Post subclient properties.
+
+        Args:
+            subclient_id (str): subclient id
+            props (str): XML client properties string
+
+        Returns:
+            dict: response
+        """
+
+        if isinstance(subclient_id, int):
+            log.warning('deprecated: subclient_id support for int for backward compatibility only')
+            subclient_id = str(subclient_id)
+            path = 'Subclient/{}'.format(subclient_id)
+            res = self.request('POST', path, payload_nondict=props, headers={"Content-type": "application/xml"})
+            if not res.json():
+                data = xmltodict.parse(res.text)
+            else:
+                data = res.json()
+            return data
