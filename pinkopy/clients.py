@@ -113,7 +113,6 @@ class ClientSession(BaseSession):
         path = 'Client'
         res = self.request('GET', path)
         data = res.json()
-        print(data)
         try:
             clients = data['clientProperties']
         except KeyError:

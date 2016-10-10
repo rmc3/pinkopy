@@ -31,7 +31,7 @@ class ClientGroupSession(BaseSession):
             raise_requests_error(404, msg)
         return groups
 
-    def get_client_properties(self, group_id, xml=False):
+    def get_client_group_properties(self, group_id, xml=False):
         """Get client group properties.
 
         This call sometimes replies in XML, because who cares about
@@ -64,13 +64,51 @@ class ClientGroupSession(BaseSession):
                 data = xmltodict.parse(res.text)
             else:
                 data = res.json()
-            return data
             try:
-                props = data['clientProperties']
+                props = data['clientGroupDetail']
             except KeyError:
                 # support previous Commvault api versions
-                props = data['App_GetClientPropertiesResponse']['clientProperties']
+                props = data['App_PerformClientGroupResp']['clientGroupDetail']
             if not props:
-                msg = 'No client properties found for client {}'.format(client_id)
+                msg = 'No client properties found for client group {}'.format(client_id)
                 raise_requests_error(404, msg)
             return props
+
+
+    def post_client_group(self, props):
+        """Create a new client group
+
+        Args:
+            props (str): XML client group properties string
+
+        Returns:
+            dict: response
+        """
+        path = 'ClientGroup'
+        res = self.request('POST', path, payload_nondict=props, headers={"Content-type": "application/xml"})
+        if not res.json():
+            data = xmltodict.parse(res.text)
+        else:
+            data = res.json()
+        return data['clientGroupDetail']
+
+    def post_client_group_properties(self, client_group_id, props):
+        """Post client group properties.
+
+        Args:
+            client_group_id (str): client group id
+            props (str): XML subclient properties string
+
+        Returns:
+            dict: response
+        """
+        if isinstance(client_group_id, int):
+            log.warning('deprecated: subclient_id support for int for backward compatibility only')
+            client_group_id = str(client_group_id)
+        path = 'ClientGroup/{}'.format(client_group_id)
+        res = self.request('POST', path, payload_nondict=props, headers={"Content-type": "application/xml"})
+        if not res.json():
+            data = xmltodict.parse(res.text)
+        else:
+            data = res.json()
+        return data

@@ -44,7 +44,7 @@ class SubclientSession(BaseSession):
 
         Args:
             subclient_id (str): subclient id
-            props (str): XML client properties string
+            props (str): XML subclient properties string
 
         Returns:
             dict: response
