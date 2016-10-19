@@ -25,10 +25,10 @@ class ClientGroupSession(BaseSession):
         path = 'ClientGroup'
         res = self.request('GET', path)
         data = res.json()
-        groups = data['groups']
-        if not groups:
-            msg = 'No client groups found in Commvault'
-            raise_requests_error(404, msg)
+        if not 'groups' in data:
+            groups = []
+        else:
+            groups = data['groups']
         return groups
 
     def get_client_group_properties(self, group_id, xml=False):
