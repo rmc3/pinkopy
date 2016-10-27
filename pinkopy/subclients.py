@@ -39,6 +39,30 @@ class SubclientSession(BaseSession):
             raise_requests_error(404, msg)
         return subclients
 
+    def get_subclient_properties(self, subclient_id):
+        """Get properties of a subclient.
+
+        Args:
+            subclient_id: ID of the subclient whose properties should be returned
+
+        Returns:
+            dict: subclient properties
+        """
+        if isinstance(subclient_id, int):
+            log.warning('deprecated: subclient_id support for int for backward compatibility only')
+            subclient_id = str(subclient_id)
+        path = 'Subclient/{}'.format(subclient_id)
+        res = self.request('GET', path)
+        data = res.json()
+        try:
+            subclient = data['subClientProperties']
+        except KeyError:
+            subclient = data['App_GetSubClientPropertiesResponse']['subClientProperties']
+        if not subclient:
+            msg = 'No data returned for subclient ID {}'.format(subclient_id)
+            raise_requests_error(404, msg)
+        return subclient[0]
+
     def post_subclient_properties(self, subclient_id, props):
         """Post subclient properties.
 

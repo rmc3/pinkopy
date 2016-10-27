@@ -5,6 +5,7 @@ from .clients import ClientSession
 from .jobs import JobSession
 from .subclients import SubclientSession
 from .client_groups import ClientGroupSession
+from .schedules import SchedulesSession
 
 log = logging.getLogger(__name__)
 
@@ -24,10 +25,13 @@ class CommvaultSession(BaseSession):
         self.subclients = SubclientSession(token=self.headers['Authtoken'], *args, **kwargs)
         self.jobs = JobSession(token=self.headers['Authtoken'], *args, **kwargs)
         self.client_groups = ClientGroupSession(token=self.headers['Authtoken'], *args, **kwargs)
+        self.schedules = SchedulesSession(token=self.headers['Authtoken'], *args, **kwargs)
 
         self.subsessions = [self.clients,
                             self.subclients,
-                            self.jobs]
+                            self.jobs,
+                            self.client_groups,
+                            self.schedules]
 
         # shim for backwards compatibility
         self.get_client = self.clients.get_client
