@@ -36,6 +36,9 @@ class JobSession(BaseSession):
         res = self.request('GET', path, qstr_vals=qstr_vals)
         data = res.json()
         try:
+            for i, job in enumerate(data['jobs']):
+                if not 'subclientName' in job['jobSummary']['subclient']:
+                    data['jobs'][i]['jobSummary']['subclient']['subclientName'] = None
             jobs = sorted(
                 data['jobs'],
                 key=lambda job: job['jobSummary']['subclient']['subclientName']
